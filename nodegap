@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+use Mojolicious::Lite;
+use Data::UUID;
+
+my $uuid_gen = Data::UUID->new;
+
+post '/open/sms/send' => sub {
+  my $c = shift;
+
+  my $post_data = $c->req->json;
+
+  my $send_num = $post_data->{'sourceAddr'};
+  my $receive_num = $post_data->{'destAddr'};
+  my $msg = $post_data->{'message'};
+  my $res_id = $uuid_gen->create_str;
+
+  $c->render(json => {
+      'Message ID' => "$res_id",
+      'Message Sender' => "$send_num",
+      'Message Receriver' => "$receive_num",
+      'Message' => "$msg"
+            });
+};
+
+app->start;
+__DATA__
+
+@@ index.html.ep
+% layout 'default';
+% title 'Welcome';
+<h1>Welcome to the Mojolicious real-time web framework!</h1>
+To learn more, you can browse through the documentation
+<%= link_to 'here' => '/perldoc' %>.
+
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+  <head><title><%= title %></title></head>
+  <body><%= content %></body>
+</html>
