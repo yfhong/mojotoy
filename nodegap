@@ -2,6 +2,13 @@
 use Mojolicious::Lite;
 use Data::UUID;
 
+app->config(
+    hypnotoad => {
+        listen => ['http://*:8000'],
+        workers => 12,
+    }
+    );
+
 my $uuid_gen = Data::UUID->new;
 
 post '/open/sms/send' => sub {
