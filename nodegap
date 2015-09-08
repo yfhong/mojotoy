@@ -21,7 +21,7 @@ post '/open/sms/send' => sub {
   my $receive_num = $post_data->{'destAddr'};
   my $msg = $post_data->{'message'};
   # my $res_id = $uuid_gen->create_str;
-  my $bytes = encode_json {mobiles => $receive_num, serviceid => '10658524', content => $msg};
+  my $bytes = encode_json {mobiles => [$receive_num], serviceid => '10658524', content => $msg};
 
   $c->delay(
       sub {
