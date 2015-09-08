@@ -12,7 +12,7 @@ app->config(
     }
     );
 
-helper redis => sub { shift->stash->{redis} ||= Mojo::Redis2->new(url => 'redis://192.168.32.98:6379/'); };
+helper redis => sub { shift->stash->{redis} ||= Mojo::Redis2->new(url => 'redis://192.168.32.98:6379/')->protocol_class('Protocol::Redis::XS'); };
 
 my $uuid_gen = Data::UUID->new;
 
