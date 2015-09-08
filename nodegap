@@ -1,6 +1,9 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
 use Data::UUID;
+use Mojo::Redis2;
+use Protocol::Redis::XS;
+use Mojo::JSON qw(encode_json);
 
 app->config(
     hypnotoad => {
@@ -8,6 +11,8 @@ app->config(
         workers => 12,
     }
     );
+
+helper redis => sub { shift->stash->{redis} ||= Mojo::Redis2->new(url => 'redis://192.168.32.98:6379/'); };
 
 my $uuid_gen = Data::UUID->new;
 
@@ -19,14 +24,26 @@ post '/open/sms/send' => sub {
   my $send_num = $post_data->{'sourceAddr'};
   my $receive_num = $post_data->{'destAddr'};
   my $msg = $post_data->{'message'};
-  my $res_id = $uuid_gen->create_str;
+  # my $res_id = $uuid_gen->create_str;
+  my $bytes = encode_json {mobiles => $receive_num, serviceid => '10658524', content => $msg};
 
-  $c->render(json => {
-      'Message ID' => "$res_id",
-      'Message Sender' => "$send_num",
-      'Message Receriver' => "$receive_num",
-      'Message' => "$msg"
-            });
+  $c->delay(
+      sub {
+          my ($delay) = @_;
+          $c->redis->rpush('dsReqQueueName', $bytes, $delay->begin);
+      },
+      sub {
+          my ($delay, $err, $message) = @_;
+          $c->render(text => 'OK');
+          # $c->render(json => { error => $err, message => $message });
+      },
+      );
+  # $c->render(json => {
+  #     'Message ID' => "$res_id",
+  #     'Message Sender' => "$send_num",
+  #     'Message Receriver' => "$receive_num",
+  #     'Message' => "$msg"
+  #           });
 };
 
 app->start;
